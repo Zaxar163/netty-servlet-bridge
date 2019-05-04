@@ -26,7 +26,7 @@ import java.io.IOException;
 
 public class ServletInputStreamImpl extends ServletInputStream {
 
-    private HttpRequest request;
+    public HttpRequest request;
 
     private ByteBufInputStream in;
 

@@ -16,8 +16,8 @@
 
 package net.javaforge.netty.servlet.bridge.util;
 
-import io.netty.handler.codec.http.Cookie;
-import io.netty.handler.codec.http.CookieDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import net.javaforge.netty.servlet.bridge.ServletBridgeRuntimeException;
@@ -29,7 +29,7 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.*;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 
 public final class Utils {
 
@@ -111,9 +111,9 @@ public final class Utils {
         String cookieString = request.headers().get(COOKIE);
         if (cookieString != null) {
             List<Cookie> foundCookie = new ArrayList<Cookie>();
-            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+            Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieString);
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(name))
+                if (cookie.name().equals(name))
                     foundCookie.add(cookie);
             }
 
@@ -127,9 +127,9 @@ public final class Utils {
         String cookieString = response.headers().get(COOKIE);
         if (cookieString != null) {
             List<Cookie> foundCookie = new ArrayList<Cookie>();
-            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+            Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieString);
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(name))
+                if (cookie.name().equals(name))
                     foundCookie.add(cookie);
             }
 

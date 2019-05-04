@@ -17,8 +17,10 @@
 package net.javaforge.netty.servlet.bridge.impl;
 
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.HttpHeaders.Names;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.AsciiString;
 import net.javaforge.netty.servlet.bridge.ChannelThreadLocal;
 import net.javaforge.netty.servlet.bridge.HttpSessionThreadLocal;
 import net.javaforge.netty.servlet.bridge.util.Utils;
@@ -36,9 +38,8 @@ import java.net.InetSocketAddress;
 import java.security.Principal;
 import java.util.*;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 
-@SuppressWarnings("unchecked")
 public class HttpServletRequestImpl implements HttpServletRequest {
 
     private static final Locale DEFAULT_LOCALE = Locale.getDefault();
@@ -70,9 +71,9 @@ public class HttpServletRequestImpl implements HttpServletRequest {
             this.inputStream = new ServletInputStreamImpl(request);
         }
         this.reader = new BufferedReader(new InputStreamReader(inputStream));
-        this.queryStringDecoder = new QueryStringDecoder(request.getUri());
+        this.queryStringDecoder = new QueryStringDecoder(request.uri());
         this.uriParser = new URIParser(chain);
-        this.uriParser.parse(request.getUri());
+        this.uriParser.parse(request.uri());
         this.characterEncoding = Utils
                 .getCharsetFromContentType(getContentType());
 
@@ -91,19 +92,19 @@ public class HttpServletRequestImpl implements HttpServletRequest {
     public Cookie[] getCookies() {
         String cookieString = this.originalRequest.headers().get(COOKIE);
         if (cookieString != null) {
-            Set<io.netty.handler.codec.http.Cookie> cookies = CookieDecoder
+            Set<io.netty.handler.codec.http.cookie.Cookie> cookies = ServerCookieDecoder.STRICT
                     .decode(cookieString);
             if (!cookies.isEmpty()) {
                 Cookie[] cookiesArray = new Cookie[cookies.size()];
                 int indx = 0;
-                for (io.netty.handler.codec.http.Cookie c : cookies) {
-                    Cookie cookie = new Cookie(c.getName(), c.getValue());
-                    cookie.setComment(c.getComment());
-                    cookie.setDomain(c.getDomain());
-                    cookie.setMaxAge((int) c.getMaxAge());
-                    cookie.setPath(c.getPath());
+                for (io.netty.handler.codec.http.cookie.Cookie c : cookies) {
+                    Cookie cookie = new Cookie(c.name(), c.value());
+                    //cookie.setComment(c.);
+                    cookie.setDomain(c.domain());
+                    cookie.setMaxAge((int) c.maxAge());
+                    cookie.setPath(c.path());
                     cookie.setSecure(c.isSecure());
-                    cookie.setVersion(c.getVersion());
+                    cookie.setVersion(0);
                     cookiesArray[indx] = cookie;
                     indx++;
                 }
@@ -125,14 +126,20 @@ public class HttpServletRequestImpl implements HttpServletRequest {
 
     @Override
     public String getHeader(String name) {
-        return HttpHeaders.getHeader(this.originalRequest, name);
+        return this.originalRequest.headers().get(name);
     }
 
-    @Override
+    public String getHeader(AsciiString name) {
+        return this.originalRequest.headers().get(name);
+    }
+
+    @SuppressWarnings("rawtypes")
+	@Override
     public Enumeration getHeaderNames() {
         return Utils.enumeration(this.originalRequest.headers().names());
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Enumeration getHeaders(String name) {
         return Utils.enumeration(this.originalRequest.headers().getAll(name));
@@ -140,7 +147,7 @@ public class HttpServletRequestImpl implements HttpServletRequest {
 
     @Override
     public int getIntHeader(String name) {
-        return HttpHeaders.getIntHeader(this.originalRequest, name, -1);
+        return this.originalRequest.headers().getInt(name, -1);
     }
 
     @Override
@@ -186,13 +193,13 @@ public class HttpServletRequestImpl implements HttpServletRequest {
 
     @Override
     public int getContentLength() {
-        return (int) HttpHeaders.getContentLength(this.originalRequest, -1);
+        return (int) HttpUtil.getContentLength(this.originalRequest, -1);
     }
 
     @Override
     public String getContentType() {
-        return HttpHeaders.getHeader(this.originalRequest,
-                HttpHeaders.Names.CONTENT_TYPE);
+        return this.originalRequest.headers().get(
+                HttpHeaderNames.CONTENT_TYPE);
     }
 
     @Override
@@ -211,12 +218,14 @@ public class HttpServletRequestImpl implements HttpServletRequest {
         return values != null ? values[0] : null;
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Map getParameterMap() {
         return this.queryStringDecoder.parameters();
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Enumeration getParameterNames() {
         return Utils.enumerationFromKeys(this.queryStringDecoder
                 .parameters());
@@ -232,7 +241,7 @@ public class HttpServletRequestImpl implements HttpServletRequest {
 
     @Override
     public String getProtocol() {
-        return this.originalRequest.getProtocolVersion().toString();
+        return this.originalRequest.protocolVersion().toString();
     }
 
     @Override
@@ -244,7 +253,7 @@ public class HttpServletRequestImpl implements HttpServletRequest {
     }
 
     @Override
-    public Enumeration getAttributeNames() {
+    public Enumeration<String> getAttributeNames() {
         return Utils.enumerationFromKeys(this.attributes);
     }
 
@@ -295,8 +304,7 @@ public class HttpServletRequestImpl implements HttpServletRequest {
 
     @Override
     public Locale getLocale() {
-        String locale = HttpHeaders.getHeader(this.originalRequest,
-                Names.ACCEPT_LANGUAGE, DEFAULT_LOCALE.toString());
+        String locale = this.originalRequest.headers().get(HttpHeaderNames.ACCEPT_LANGUAGE, DEFAULT_LOCALE.toString());
         return new Locale(locale);
     }
 
@@ -382,12 +390,12 @@ public class HttpServletRequestImpl implements HttpServletRequest {
         this.characterEncoding = env;
     }
 
-    @Override
-    public Enumeration getLocales() {
+	@Override
+    public Enumeration<Locale> getLocales() {
         Collection<Locale> locales = Utils
-                .parseAcceptLanguageHeader(HttpHeaders
-                        .getHeader(this.originalRequest,
-                                HttpHeaders.Names.ACCEPT_LANGUAGE));
+                .parseAcceptLanguageHeader(
+                        this.originalRequest.headers().get(
+                                HttpHeaderNames.ACCEPT_LANGUAGE));
 
         if (locales == null || locales.isEmpty()) {
             locales = new ArrayList<Locale>();

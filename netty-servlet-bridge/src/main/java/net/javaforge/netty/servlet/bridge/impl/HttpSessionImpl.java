@@ -23,11 +23,12 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionBindingListener;
 import javax.servlet.http.HttpSessionContext;
+
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings({"deprecation", "unchecked"})
+@SuppressWarnings("deprecation")
 public class HttpSessionImpl implements HttpSession {
 
     public static final String SESSION_ID_KEY = "JSESSIONID";
@@ -53,7 +54,8 @@ public class HttpSessionImpl implements HttpSession {
         return attributes != null ? attributes.get(name) : null;
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Enumeration getAttributeNames() {
         return Utils.enumerationFromKeys(attributes);
     }
@@ -78,7 +80,7 @@ public class HttpSessionImpl implements HttpSession {
         return ServletContextImpl.get();
     }
 
-    @Override
+	@Override
     public HttpSessionContext getSessionContext() {
         throw new IllegalStateException(
                 "As of Version 2.1, this method is deprecated and has no replacement.");

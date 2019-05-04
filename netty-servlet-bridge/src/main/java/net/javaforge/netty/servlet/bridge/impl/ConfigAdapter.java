@@ -46,8 +46,8 @@ public abstract class ConfigAdapter {
         return this.initParameters.get(name);
     }
 
-    @SuppressWarnings("unchecked")
-    public Enumeration getInitParameterNames() {
+    @SuppressWarnings("rawtypes")
+	public Enumeration getInitParameterNames() {
         return Utils.enumerationFromKeys(this.initParameters);
     }
 

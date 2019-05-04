@@ -17,7 +17,10 @@
 package net.javaforge.netty.servlet.bridge.interceptor;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import net.javaforge.netty.servlet.bridge.HttpSessionThreadLocal;
 import net.javaforge.netty.servlet.bridge.ServletBridgeInterceptor;
 import net.javaforge.netty.servlet.bridge.impl.HttpSessionImpl;
@@ -26,7 +29,7 @@ import net.javaforge.netty.servlet.bridge.util.Utils;
 
 import java.util.Collection;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 
 public class HttpSessionInterceptor implements ServletBridgeInterceptor {
 
@@ -45,7 +48,7 @@ public class HttpSessionInterceptor implements ServletBridgeInterceptor {
                 HttpSessionImpl.SESSION_ID_KEY, request);
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                String jsessionId = cookie.getValue();
+                String jsessionId = cookie.value();
                 HttpSessionImpl s = HttpSessionThreadLocal.getSessionStore()
                         .findSession(jsessionId);
                 if (s != null) {
@@ -63,7 +66,7 @@ public class HttpSessionInterceptor implements ServletBridgeInterceptor {
 
         HttpSessionImpl s = HttpSessionThreadLocal.get();
         if (s != null && !this.sessionRequestedByCookie) {
-            HttpHeaders.addHeader(response, SET_COOKIE, ServerCookieEncoder.encode(HttpSessionImpl.SESSION_ID_KEY, s.getId()));
+            response.headers().add(SET_COOKIE, ServerCookieEncoder.STRICT.encode(HttpSessionImpl.SESSION_ID_KEY, s.getId()));
         }
 
     }

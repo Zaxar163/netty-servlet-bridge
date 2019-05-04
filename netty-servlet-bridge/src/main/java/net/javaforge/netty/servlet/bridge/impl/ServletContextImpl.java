@@ -33,7 +33,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-@SuppressWarnings("unchecked")
 public class ServletContextImpl extends ConfigAdapter implements ServletContext {
 
     private static final Logger log = LoggerFactory
@@ -61,7 +60,8 @@ public class ServletContextImpl extends ConfigAdapter implements ServletContext 
         return attributes != null ? attributes.get(name) : null;
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Enumeration getAttributeNames() {
         return Utils.enumerationFromKeys(attributes);
     }
@@ -140,13 +140,15 @@ public class ServletContextImpl extends ConfigAdapter implements ServletContext 
                 "Deprecated as of Java Servlet API 2.1, with no direct replacement!");
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Enumeration getServletNames() {
         throw new IllegalStateException(
                 "Method 'getServletNames' deprecated as of Java Servlet API 2.0, with no replacement.");
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Enumeration getServlets() {
         throw new IllegalStateException(
                 "Method 'getServlets' deprecated as of Java Servlet API 2.0, with no replacement.");
@@ -163,7 +165,8 @@ public class ServletContextImpl extends ConfigAdapter implements ServletContext 
 
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public Set getResourcePaths(String path) {
         throw new IllegalStateException(
                 "Method 'getResourcePaths' not yet implemented!");

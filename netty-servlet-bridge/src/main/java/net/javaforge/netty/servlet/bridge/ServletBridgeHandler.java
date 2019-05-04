@@ -40,8 +40,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpUtil.setContentLength;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -105,7 +105,7 @@ public class ServletBridgeHandler extends IdleStateHandler {
             String uri = request.uri();
 
             if (uri.startsWith(uriPrefix)) {
-                if (HttpHeaders.is100ContinueExpected(request)) {
+                if (HttpUtil.is100ContinueExpected(request)) {
                     ctx.channel().write(new DefaultHttpResponse(HTTP_1_1, CONTINUE));
                 }
 
@@ -118,7 +118,7 @@ public class ServletBridgeHandler extends IdleStateHandler {
                     handleStaticResourceRequest(ctx, request);
                 } else {
                     throw new ServletBridgeRuntimeException(
-                            "No handler found for uri: " + request.getUri());
+                            "No handler found for uri: " + request.uri());
                 }
             } else {
                 ctx.fireChannelRead(e);
@@ -145,7 +145,7 @@ public class ServletBridgeHandler extends IdleStateHandler {
 
         resp.getWriter().flush();
 
-        boolean keepAlive = HttpHeaders.isKeepAlive(request);
+        boolean keepAlive = HttpUtil.isKeepAlive(request);
 
         if (keepAlive) {
 
@@ -154,7 +154,7 @@ public class ServletBridgeHandler extends IdleStateHandler {
             // Add keep alive header as per:
             // -
             // http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
-            response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         }
 
         // write response...

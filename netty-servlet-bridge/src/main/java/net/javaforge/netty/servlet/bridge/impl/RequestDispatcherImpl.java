@@ -18,12 +18,12 @@ public class RequestDispatcherImpl implements RequestDispatcher {
     /**
      * The servlet name for a named dispatcher.
      */
-    private String name = null;
+    public String name = null;
 
     /**
      * The servlet path for this RequestDispatcher.
      */
-    private String servletPath = null;
+    public String servletPath = null;
 
 
     private HttpServlet httpServlet;

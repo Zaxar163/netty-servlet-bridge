@@ -24,7 +24,7 @@ import java.io.IOException;
 
 public class ServletOutputStreamImpl extends ServletOutputStream {
 
-    private FullHttpResponse response;
+    public FullHttpResponse response;
 
     private ByteBufOutputStream out;
 

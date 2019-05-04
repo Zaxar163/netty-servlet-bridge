@@ -16,8 +16,12 @@
 
 package net.javaforge.netty.servlet.bridge.impl;
 
-import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.HttpHeaders.Names;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import net.javaforge.netty.servlet.bridge.ServletBridgeRuntimeException;
 
 import javax.servlet.ServletOutputStream;
@@ -29,8 +33,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Locale;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.LOCATION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
+import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 
 public class HttpServletResponseImpl implements HttpServletResponse {
     private HttpResponse originalResponse;
@@ -51,23 +55,23 @@ public class HttpServletResponseImpl implements HttpServletResponse {
 
     @Override
     public void addCookie(Cookie cookie) {
-        String result = ServerCookieEncoder.encode(new io.netty.handler.codec.http.DefaultCookie(cookie.getName(), cookie.getValue()));
-        HttpHeaders.addHeader(this.originalResponse, SET_COOKIE, result);
+        String result = ServerCookieEncoder.STRICT.encode(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName(), cookie.getValue()));
+        originalResponse.headers().add(SET_COOKIE, result);//HttpHeaders.addHeader(this.originalResponse, SET_COOKIE, result);
     }
 
     @Override
     public void addDateHeader(String name, long date) {
-        HttpHeaders.addHeader(this.originalResponse, name, date);
+    	originalResponse.headers().add(name, date);
     }
 
     @Override
     public void addHeader(String name, String value) {
-        HttpHeaders.addHeader(this.originalResponse, name, value);
+    	originalResponse.headers().add(name, value);
     }
 
     @Override
     public void addIntHeader(String name, int value) {
-        HttpHeaders.addIntHeader(this.originalResponse, name, value);
+    	originalResponse.headers().add(name, value);
     }
 
     @Override
@@ -99,23 +103,22 @@ public class HttpServletResponseImpl implements HttpServletResponse {
     @Override
     public void sendRedirect(String location) throws IOException {
         setStatus(SC_FOUND);
-        setHeader(LOCATION, location);
+        setHeader(LOCATION.toString(), location);
     }
 
     @Override
     public void setDateHeader(String name, long date) {
-        HttpHeaders.setHeader(this.originalResponse, name, date);
+    	originalResponse.headers().set(name, date);
     }
 
     @Override
     public void setHeader(String name, String value) {
-        HttpHeaders.setHeader(this.originalResponse, name, value);
+    	originalResponse.headers().set(name, value);
     }
 
     @Override
     public void setIntHeader(String name, int value) {
-        HttpHeaders.setIntHeader(this.originalResponse, name, value);
-
+    	originalResponse.headers().set(name, value);
     }
 
     @Override
@@ -140,19 +143,19 @@ public class HttpServletResponseImpl implements HttpServletResponse {
 
     @Override
     public String getContentType() {
-        return HttpHeaders.getHeader(this.originalResponse,
-                HttpHeaders.Names.CONTENT_TYPE);
+        return originalResponse.headers().get(
+                HttpHeaderNames.CONTENT_TYPE);
     }
 
     @Override
     public void setContentType(String type) {
-        HttpHeaders.setHeader(this.originalResponse,
-                HttpHeaders.Names.CONTENT_TYPE, type);
+    	originalResponse.headers().set(
+                HttpHeaderNames.CONTENT_TYPE, type);
     }
 
     @Override
     public void setContentLength(int len) {
-        HttpHeaders.setContentLength(this.originalResponse, len);
+        HttpUtil.setContentLength(this.originalResponse, len);
     }
 
     @Override
@@ -219,14 +222,14 @@ public class HttpServletResponseImpl implements HttpServletResponse {
 
     @Override
     public String getCharacterEncoding() {
-        return HttpHeaders.getHeader(this.originalResponse,
-                Names.CONTENT_ENCODING);
+        return originalResponse.headers().get(
+                HttpHeaderNames.CONTENT_ENCODING);
     }
 
     @Override
     public void setCharacterEncoding(String charset) {
-        HttpHeaders.setHeader(this.originalResponse,
-                Names.CONTENT_ENCODING, charset);
+    	originalResponse.headers().set(
+    			HttpHeaderNames.CONTENT_ENCODING, charset);
     }
 
     @Override
