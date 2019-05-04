@@ -21,5 +21,6 @@ dependencies {
 
 tasks.withType(JavaCompile) {
 	options.incremental = true // one flag, and things will get MUCH faster
+	options.encoding = "UTF-8"
 }
 
